@@ -2,40 +2,16 @@
 
 void usartGPIOConf(void);
 void usartConf(void);
-void NVICConf(void);
+void usartNVICConf(void);
 
 void usartInit(void)
 {
     usartGPIOConf();
     usartConf();
-    NVICConf();
+    usartNVICConf();
     
     USART_ITConfig(USART1, USART_IT_RXNE, ENABLE);
     USART_Cmd(USART1, ENABLE);
-}
-
-void usartSendByte(uint16_t byte)
-{
-    USART_SendData(USART1, byte);
-    while(!USART_GetFlagStatus(USART1, USART_FLAG_TXE)) continue;
-}
-
-void usartSendStr(char *str)
-{
-    while(*str != '\0') usartSendByte(*(str++));
-    while(!USART_GetFlagStatus(USART1, USART_FLAG_TC)) continue;
-}
-
-int fputc(int ch, FILE *f)
-{
-    usartSendByte(ch);
-    return ch;
-}
-
-int fgetc(FILE *f)
-{
-    while(!USART_GetFlagStatus(USART1, USART_FLAG_RXNE));
-    return (int)USART_ReceiveData(USART1);
 }
 
 void usartGPIOConf(void)
@@ -68,7 +44,7 @@ void usartConf(void)
     USART_Init(USART1, &usartstr);
 }
 
-void NVICConf(void)
+void usartNVICConf(void)
 {
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
     
@@ -78,4 +54,28 @@ void NVICConf(void)
     NVICstr.NVIC_IRQChannelPreemptionPriority = 1;
     NVICstr.NVIC_IRQChannelSubPriority = 1;
     NVIC_Init(&NVICstr);
+}
+
+void usartSendByte(uint16_t byte)
+{
+    USART_SendData(USART1, byte);
+    while(!USART_GetFlagStatus(USART1, USART_FLAG_TXE)) continue;
+}
+
+void usartSendStr(char *str)
+{
+    while(*str != '\0') usartSendByte(*(str++));
+    while(!USART_GetFlagStatus(USART1, USART_FLAG_TC)) continue;
+}
+
+int fputc(int ch, FILE *f)
+{
+    usartSendByte(ch);
+    return ch;
+}
+
+int fgetc(FILE *f)
+{
+    while(!USART_GetFlagStatus(USART1, USART_FLAG_RXNE));
+    return (int)USART_ReceiveData(USART1);
 }
